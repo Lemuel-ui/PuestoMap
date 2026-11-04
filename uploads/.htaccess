@@ -1,0 +1,5 @@
+# Uploaded photos may be viewed but never executed as scripts.
+<FilesMatch "\.(php|phtml|phar|php[0-9])$">
+    Require all denied
+</FilesMatch>
+Options -Indexes
