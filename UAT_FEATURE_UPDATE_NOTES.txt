@@ -1,0 +1,14 @@
+PUESTOMAP UAT FEATURE UPDATE
+
+Implemented in this update:
+- Server-side required-field validation for vendor creation and editing.
+- Duplicate business detection using normalized business name + barangay; duplicate permit number is protected by the database unique key.
+- Map filters for barangay, business category, and permit status, plus search.
+- Map popup values are HTML-escaped before display.
+- Admin permit monitoring includes selectable 7/15/30/60/90-day expiring-permit window.
+- Printable permit records report at /admin/permit_report.php. Use browser Print / Save as PDF.
+- Notification history displays full date/time and, where linked to a permit, business name and permit number.
+
+INSTALLATION: Back up project/database, extract ZIP, copy the contents of PuestoMap into C:\xampp\htdocs\PuestoMap and replace files. No new migration is required for these UAT enhancements; retain previously imported migrations.
+
+NOTES: Vendor records are deactivated/reactivated instead of permanently deleted to preserve history. Automatic expiry notifications still require the existing daily Task Scheduler job. Run UAT against the local database before deployment.

@@ -1,12 +1,14 @@
 <?php
 require_once __DIR__ . '/../includes/auth_check.php';
-require_role(['head_officer']);
+require_role(['admin']);
 require_once __DIR__ . '/../includes/functions.php';
 
 $pdo = get_db();
 $pageTitle = 'Permit Monitoring';
 $activePage = 'permits';
 $vendors = get_all_vendors($pdo);
+$expiryWindow = max(1, min(365, (int)($_GET['window'] ?? 30)));
+$expiringVendors = get_permits_in_expiry_window($pdo, $expiryWindow);
 include __DIR__ . '/../components/head_open.php';
 ?>
 <div class="page-head">
@@ -14,6 +16,7 @@ include __DIR__ . '/../components/head_open.php';
         <h1>Permit Monitoring</h1>
         <p>Supervisory view of all business permits for decision-making and compliance tracking.</p>
     </div>
+    <a class="btn btn-outline" target="_blank" href="<?php echo BASE_URL; ?>/admin/permit_report.php">Print Permit Report</a>
 </div>
 
 <div class="toolbar">
@@ -24,6 +27,11 @@ include __DIR__ . '/../components/head_open.php';
         <option value="expiring">Expiring</option>
         <option value="expired">Expired</option>
     </select>
+</div>
+
+<div class="card" style="margin-bottom:1rem;">
+    <div class="card-header"><h3>Expiring Permits</h3><form method="get" class="toolbar" style="margin:0;"><label class="form-label" for="window">Expiration window</label><select class="form-control" id="window" name="window" onchange="this.form.submit()"><option value="7" <?php echo $expiryWindow===7?'selected':''; ?>>Next 7 days</option><option value="15" <?php echo $expiryWindow===15?'selected':''; ?>>Next 15 days</option><option value="30" <?php echo $expiryWindow===30?'selected':''; ?>>Next 30 days</option><option value="60" <?php echo $expiryWindow===60?'selected':''; ?>>Next 60 days</option><option value="90" <?php echo $expiryWindow===90?'selected':''; ?>>Next 90 days</option></select></form></div>
+    <div class="card-body" style="padding:0;"><table class="pm-table"><thead><tr><th>Business</th><th>Permit No.</th><th>Barangay</th><th>Expiry Date</th><th>Status</th></tr></thead><tbody><?php foreach ($expiringVendors as $ev): ?><tr><td><?php echo htmlspecialchars($ev['name']); ?></td><td><?php echo htmlspecialchars($ev['permit_no']); ?></td><td><?php echo htmlspecialchars($ev['barangay']); ?></td><td><?php echo htmlspecialchars($ev['expiry']); ?></td><td><span class="pin-status <?php echo $ev['permit_status']; ?>"><?php echo ucfirst($ev['permit_status']); ?></span></td></tr><?php endforeach; ?><?php if (!$expiringVendors): ?><tr><td colspan="5">No permits are expiring within the selected window.</td></tr><?php endif; ?></tbody></table></div>
 </div>
 
 <div class="card">

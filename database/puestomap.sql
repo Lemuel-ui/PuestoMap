@@ -18,9 +18,10 @@ CREATE DATABASE IF NOT EXISTS puestomap CHARACTER SET utf8mb4 COLLATE utf8mb4_un
 USE puestomap;
 
 -- ---------------------------------------------------------------------------
--- Users: MISU Administrator, BPLO Head Officer, BPLO Staff,
+-- Users: Admin / BPLO Head Officer, BPLO Staff,
 --        Business Permit Inspector, Vendor
 -- ---------------------------------------------------------------------------
+DROP TABLE IF EXISTS account_registration_requests;
 DROP TABLE IF EXISTS business_location_requests;
 DROP TABLE IF EXISTS backup_logs;
 DROP TABLE IF EXISTS notifications;
@@ -35,9 +36,31 @@ CREATE TABLE users (
     full_name     VARCHAR(150) NOT NULL,
     email         VARCHAR(150) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role          ENUM('admin','bplo_staff','head_officer','inspector','vendor') NOT NULL,
+    role          ENUM('admin','bplo_staff','inspector','vendor') NOT NULL,
     is_active     TINYINT(1) NOT NULL DEFAULT 1,
     created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ---------------------------------------------------------------------------
+-- Self-registration requests. New staff, inspector, and vendor accounts
+-- remain here until an administrator approves them. No login account exists
+-- in `users` until approval.
+-- ---------------------------------------------------------------------------
+CREATE TABLE account_registration_requests (
+    request_id       INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    full_name        VARCHAR(150) NOT NULL,
+    email            VARCHAR(150) NOT NULL,
+    password_hash    VARCHAR(255) NOT NULL,
+    requested_role   ENUM('bplo_staff','inspector','vendor') NOT NULL,
+    status           ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+    review_note      VARCHAR(500) NULL,
+    reviewed_by      INT UNSIGNED NULL,
+    requested_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    reviewed_at      TIMESTAMP NULL DEFAULT NULL,
+    CONSTRAINT fk_registration_reviewer FOREIGN KEY (reviewed_by)
+        REFERENCES users(user_id) ON DELETE SET NULL,
+    INDEX idx_registration_status (status),
+    INDEX idx_registration_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ---------------------------------------------------------------------------

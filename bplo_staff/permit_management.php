@@ -9,6 +9,7 @@ $activePage = 'permits';
 $renewed = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['renew_permit_id'])) {
+    verify_csrf();
     $permitId = (int)$_POST['renew_permit_id'];
     $newExpiry = $_POST['new_expiry'] ?: date('Y-m-d', strtotime('+1 year'));
     renew_permit($pdo, $permitId, $newExpiry);
@@ -49,6 +50,7 @@ include __DIR__ . '/../components/head_open.php';
                     <td>
                         <?php if ($v['permit_status'] !== 'active' && $v['permit_id']): ?>
                         <form method="POST" style="display:flex;gap:.4rem;align-items:center;">
+                <?php echo csrf_field(); ?>
                             <input type="hidden" name="renew_permit_id" value="<?php echo $v['permit_id']; ?>">
                             <input type="hidden" name="permit_no_label" value="<?php echo htmlspecialchars($v['permit_no']); ?>">
                             <input type="date" name="new_expiry" class="form-control btn-sm" style="max-width:150px;" value="<?php echo date('Y-m-d', strtotime('+1 year')); ?>">

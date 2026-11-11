@@ -1,0 +1,29 @@
+PUestomap account approval setup
+=================================
+
+FRESH DATABASE:
+1. Create a NEW empty database named puestomap.
+2. Import database/puestomap.sql (updated schema includes account_registration_requests).
+
+EXISTING DATABASE:
+1. Back up the current database first.
+2. Open phpMyAdmin and select puestomap.
+3. Import database/migrations/20261106_account_registration_approval.sql first.
+   This creates the registration-requests table.
+4. Import database/migrations/20261109_combine_admin_head_officer.sql.
+   This converts existing head_officer accounts to admin and removes the old role from the users table. It does not delete user records.
+
+ROLE UPDATE:
+- Admin and BPLO Head Officer are now one role: Admin / BPLO Head Officer.
+- Existing head_officer accounts are converted to admin by the second migration.
+- Admin navigation includes Permit Monitoring and Inspection Reports.
+
+HOW IT WORKS:
+1. Applicant opens /register/index.php.
+2. Applicant selects BPLO Staff, Business Permit Inspector, or Vendor and submits details.
+3. The request is stored as pending. No row is created in users yet, so login is not possible.
+4. Admin / BPLO Head Officer signs in and opens Account Approvals in the sidebar.
+5. Approve creates an active user in users. Reject does not create a user.
+6. Vendor accounts still need a business profile linked by BPLO Staff through Vendor Registration.
+
+Public self-registration intentionally does not offer the combined Admin / BPLO Head Officer role.

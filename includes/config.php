@@ -75,19 +75,42 @@ if (session_status() === PHP_SESSION_NONE) {
  * Local XAMPP defaults are retained for development. Configure environment
  * variables in hosting for production; never commit real credentials.
  * ======================================================================= */
-function pm_env(string $key, string $default): string
-{
-    $value = getenv($key);
-    return ($value === false || $value === '') ? $default : $value;
+// Optional protected local configuration for shared hosting panels that do
+// not expose environment variables. Keep local_config.php out of version control.
+$PM_LOCAL_CONFIG = [];
+$PM_LOCAL_CONFIG_FILE = __DIR__ . '/local_config.php';
+if (is_file($PM_LOCAL_CONFIG_FILE)) {
+    $loadedConfig = require $PM_LOCAL_CONFIG_FILE;
+    if (is_array($loadedConfig)) {
+        $PM_LOCAL_CONFIG = $loadedConfig;
+    }
 }
 
-define('APP_ENV', pm_env('APP_ENV', 'local'));
-define('DB_HOST', pm_env('DB_HOST', 'localhost'));
-define('DB_PORT', pm_env('DB_PORT', '3306'));
-define('DB_NAME', pm_env('DB_NAME', 'puestomap'));
-define('DB_USER', pm_env('DB_USER', 'root'));
-define('DB_PASS', pm_env('DB_PASS', ''));
+function pm_env(string $key, string $default, array $localConfig = []): string
+{
+    $value = getenv($key);
+    if ($value !== false && $value !== '') {
+        return (string) $value;
+    }
+    if (isset($localConfig[$key]) && is_scalar($localConfig[$key]) && (string) $localConfig[$key] !== '') {
+        return (string) $localConfig[$key];
+    }
+    return $default;
+}
+
+define('APP_ENV', pm_env('APP_ENV', 'local', $PM_LOCAL_CONFIG));
+define('DB_HOST', pm_env('DB_HOST', 'localhost', $PM_LOCAL_CONFIG));
+define('DB_PORT', pm_env('DB_PORT', '3306', $PM_LOCAL_CONFIG));
+define('DB_NAME', pm_env('DB_NAME', 'puestomap', $PM_LOCAL_CONFIG));
+define('DB_USER', pm_env('DB_USER', 'root', $PM_LOCAL_CONFIG));
+define('DB_PASS', pm_env('DB_PASS', '', $PM_LOCAL_CONFIG));
 define('DB_CHARSET', 'utf8mb4');
+
+// Backups should be stored outside the public website directory. Set
+// PUESTOMAP_BACKUP_DIR to an absolute private path on the hosting account.
+$defaultPrivateBackupDir = dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'puestomap_private'
+    . DIRECTORY_SEPARATOR . 'backups' . DIRECTORY_SEPARATOR;
+define('BACKUP_DIR', rtrim(pm_env('PUESTOMAP_BACKUP_DIR', $defaultPrivateBackupDir, $PM_LOCAL_CONFIG), '/\\\\') . DIRECTORY_SEPARATOR);
 
 if (APP_ENV === 'production' && (DB_USER === 'root' || DB_PASS === '')) {
     error_log(APP_NAME . ': Production database credentials are not safely configured.');
@@ -105,9 +128,8 @@ define('UPLOAD_URL', BASE_URL . '/uploads/inspections/');
  * Roles
  * ======================================================================= */
 define('ROLE_LABELS', [
-    'admin'        => 'MISU Administrator',
+    'admin'        => 'Admin / BPLO Head Officer',
     'bplo_staff'   => 'BPLO Staff',
-    'head_officer' => 'BPLO Head Officer',
     'inspector'    => 'Business Permit Inspector',
     'vendor'       => 'Vendor',
 ]);
@@ -116,7 +138,6 @@ define('ROLE_LABELS', [
 define('ROLE_HOME', [
     'admin'        => BASE_URL . '/admin/dashboard.php',
     'bplo_staff'   => BASE_URL . '/bplo_staff/dashboard.php',
-    'head_officer' => BASE_URL . '/head_officer/dashboard.php',
     'inspector'    => BASE_URL . '/inspector/dashboard.php',
     'vendor'       => BASE_URL . '/vendor/dashboard.php',
 ]);

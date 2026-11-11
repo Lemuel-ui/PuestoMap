@@ -19,8 +19,11 @@ include __DIR__ . '/../components/head_open.php';
 <div class="card">
     <div class="card-header" style="flex-wrap:wrap;gap:.75rem;">
         <h3>Municipality of Manolo Fortich</h3>
-        <div class="toolbar" style="margin:0;">
-            <input type="text" class="form-control" id="mapSearch" placeholder="Search vendor or barangay...">
+        <div class="toolbar" style="margin:0;flex-wrap:wrap;">
+            <input type="text" class="form-control" id="mapSearch" placeholder="Search vendor..." style="max-width:220px;">
+            <select class="form-control" id="mapBarangay" style="max-width:180px;"><option value="">All Barangays</option><?php foreach (array_unique(array_column($vendors, 'barangay')) as $b): ?><option value="<?php echo htmlspecialchars($b, ENT_QUOTES); ?>"><?php echo htmlspecialchars($b); ?></option><?php endforeach; ?></select>
+            <select class="form-control" id="mapCategory" style="max-width:200px;"><option value="">All Business Types</option><?php foreach (array_unique(array_filter(array_column($vendors, 'category'))) as $c): ?><option value="<?php echo htmlspecialchars($c, ENT_QUOTES); ?>"><?php echo htmlspecialchars($c); ?></option><?php endforeach; ?></select>
+            <select class="form-control" id="mapStatus" style="max-width:170px;"><option value="">All Permit Statuses</option><option value="active">Active</option><option value="expiring">Expiring</option><option value="expired">Expired</option></select>
         </div>
     </div>
     <div class="card-body">
@@ -39,8 +42,16 @@ include __DIR__ . '/../components/head_open.php';
     var vendors = <?php echo json_encode($vendors); ?>;
     var mapHandle = initPuestoMap('gis-map', vendors);
 
-    document.getElementById('mapSearch').addEventListener('input', function (e) {
-        pmFilterMapBySearch(mapHandle, vendors, e.target.value);
+    function applyMapFilters() {
+        pmFilterMap(mapHandle, vendors, {
+            query: document.getElementById('mapSearch').value,
+            barangay: document.getElementById('mapBarangay').value,
+            category: document.getElementById('mapCategory').value,
+            status: document.getElementById('mapStatus').value
+        });
+    }
+    ['mapSearch','mapBarangay','mapCategory','mapStatus'].forEach(function(id) {
+        document.getElementById(id).addEventListener(id === 'mapSearch' ? 'input' : 'change', applyMapFilters);
     });
 </script>
 

@@ -1,5 +1,5 @@
-# Uploaded photos may be viewed but never executed as scripts.
-<FilesMatch "\.(php|phtml|phar|php[0-9])$">
+# Uploaded images are public-viewable, but executable content is denied.
+Options -Indexes -ExecCGI
+<FilesMatch "(?i)\.(php|phtml|phar|pht|cgi|pl|py|sh|asp|aspx|jsp)$">
     Require all denied
 </FilesMatch>
-Options -Indexes

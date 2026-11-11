@@ -44,6 +44,7 @@ function initPuestoMap(containerId, vendors, options) {
   }
 
   var markers = [];
+  function esc(value) { return String(value == null ? '' : value).replace(/[&<>\"']/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#039;'}[c]); }); }
   vendors.forEach(function (v) {
     var color = statusColor[v.permit_status] || '#0F3D3E';
     var marker = L.marker([v.lat, v.lng], { icon: makePinIcon(color) }).addTo(map);
@@ -51,14 +52,16 @@ function initPuestoMap(containerId, vendors, options) {
     var statusLabel = v.permit_status.charAt(0).toUpperCase() + v.permit_status.slice(1);
     marker.bindPopup(
       '<div style="font-family: Inter, sans-serif; min-width:190px;">' +
-      '<strong style="font-family: \'Space Grotesk\', sans-serif;">' + v.name + '</strong><br>' +
-      '<span style="color:#5B6B67;font-size:.8rem;">' + v.category + '</span><br>' +
-      '<span style="font-size:.8rem;">Barangay ' + v.barangay + '</span><br>' +
-      '<span style="font-size:.8rem;">Permit: <code>' + v.permit_no + '</code></span><br>' +
+      '<strong style="font-family: \'Space Grotesk\', sans-serif;">' + esc(v.name) + '</strong><br>' +
+      '<span style="color:#5B6B67;font-size:.8rem;">' + esc(v.category) + '</span><br>' +
+      '<span style="font-size:.8rem;">Barangay ' + esc(v.barangay) + '</span><br>' +
+      '<span style="font-size:.8rem;">Permit: <code>' + esc(v.permit_no) + '</code></span><br>' +
+      '<span style="font-size:.8rem;">Expiry: ' + esc(v.expiry) + '</span><br>' +
       '<span style="display:inline-block;margin-top:.35rem;padding:.15rem .5rem;border-radius:999px;font-size:.72rem;font-weight:600;background:' + color + '22;color:' + color + ';">' + statusLabel + '</span>' +
       '</div>'
     );
     marker._vendorId = v.id;
+    marker._vendor = v;
     markers.push(marker);
   });
 
@@ -80,5 +83,24 @@ function pmFilterMapBySearch(mapHandle, vendors, query) {
     } else {
       mapHandle.map.removeLayer(marker);
     }
+  });
+}
+
+
+/** Filter pins by free-text, barangay, category and permit status. */
+function pmFilterMap(mapHandle, vendors, filters) {
+  filters = filters || {};
+  var q = String(filters.query || '').toLowerCase().trim();
+  var barangay = String(filters.barangay || '').toLowerCase();
+  var category = String(filters.category || '').toLowerCase();
+  var status = String(filters.status || '').toLowerCase();
+  mapHandle.markers.forEach(function (marker, i) {
+    var v = vendors[i];
+    var matches = (!q || String(v.name).toLowerCase().includes(q) || String(v.barangay).toLowerCase().includes(q)) &&
+      (!barangay || String(v.barangay).toLowerCase() === barangay) &&
+      (!category || String(v.category).toLowerCase() === category) &&
+      (!status || String(v.permit_status).toLowerCase() === status);
+    if (matches) { if (!mapHandle.map.hasLayer(marker)) marker.addTo(mapHandle.map); }
+    else { if (mapHandle.map.hasLayer(marker)) mapHandle.map.removeLayer(marker); }
   });
 }

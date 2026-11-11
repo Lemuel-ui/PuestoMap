@@ -43,8 +43,13 @@ if ($role === 'admin') {
         ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'grid', 'href' => BASE_URL . '/admin/dashboard.php'],
         ['section' => 'System Administration'],
         ['key' => 'accounts', 'label' => 'User Accounts', 'icon' => 'users', 'href' => BASE_URL . '/admin/user_accounts.php'],
+        ['key' => 'approvals', 'label' => 'Account Approvals', 'icon' => 'check', 'href' => BASE_URL . '/admin/account_approvals.php'],
         ['key' => 'backup', 'label' => 'Backup &amp; Restore', 'icon' => 'archive', 'href' => BASE_URL . '/admin/backup_restore.php'],
         ['key' => 'gis_map', 'label' => 'Vendor Map (GIS)', 'icon' => 'map', 'href' => BASE_URL . '/admin/gis_map.php'],
+        ['section' => 'BPLO Monitoring'],
+        ['key' => 'permits', 'label' => 'Permit Monitoring', 'icon' => 'file', 'href' => BASE_URL . '/head_officer/permit_monitoring.php'],
+        ['key' => 'permit_report', 'label' => 'Permit Records Report', 'icon' => 'clip', 'href' => BASE_URL . '/admin/permit_report.php'],
+        ['key' => 'inspections', 'label' => 'Inspection Reports', 'icon' => 'clip', 'href' => BASE_URL . '/head_officer/inspection_reports.php'],
     ];
 } elseif ($role === 'bplo_staff') {
     $nav = [
@@ -57,15 +62,6 @@ if ($role === 'admin') {
         ['key' => 'permits', 'label' => 'Permit Management', 'icon' => 'file', 'href' => BASE_URL . '/bplo_staff/permit_management.php'],
         ['key' => 'location_requests', 'label' => 'Location Requests', 'icon' => 'compass', 'href' => BASE_URL . '/bplo_staff/location_requests.php'],
         ['key' => 'gis_map', 'label' => 'Vendor Map (GIS)', 'icon' => 'map', 'href' => BASE_URL . '/bplo_staff/gis_map.php'],
-    ];
-} elseif ($role === 'head_officer') {
-    $nav = [
-        ['section' => 'Overview'],
-        ['key' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'grid', 'href' => BASE_URL . '/head_officer/dashboard.php'],
-        ['section' => 'Monitoring'],
-        ['key' => 'permits', 'label' => 'Permit Monitoring', 'icon' => 'file', 'href' => BASE_URL . '/head_officer/permit_monitoring.php'],
-        ['key' => 'inspections', 'label' => 'Inspection Reports', 'icon' => 'clip', 'href' => BASE_URL . '/head_officer/inspection_reports.php'],
-        ['key' => 'gis_map', 'label' => 'Vendor Map (GIS)', 'icon' => 'map', 'href' => BASE_URL . '/head_officer/gis_map.php'],
     ];
 } elseif ($role === 'inspector') {
     $nav = [

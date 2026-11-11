@@ -25,7 +25,9 @@ $initials = substr($initials, 0, 2);
 $notifCount = 0;
 
 try {
-    $notifCount = count_notifications(get_db());
+    $pdoForNotifications = get_db();
+    generate_permit_expiry_notifications($pdoForNotifications);
+    $notifCount = count_notifications($pdoForNotifications);
 } catch (Throwable $e) {
     error_log('Unable to load navbar notification count: ' . $e->getMessage());
 }
@@ -47,11 +49,11 @@ try {
     </div>
 
     <div class="topbar-actions">
-        <button
+        <a
             class="bell-btn"
+            href="<?php echo BASE_URL; ?>/notifications.php"
             aria-label="Notifications"
-            title="<?php echo (int) $notifCount; ?> notifications"
-            type="button"
+            title="<?php echo (int) $notifCount; ?> unread notifications"
         >
             <?php if ($notifCount > 0): ?>
                 <span class="bell-dot"></span>
@@ -71,7 +73,7 @@ try {
                 <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
-        </button>
+        </a>
 
         <div class="user-chip">
             <div class="user-avatar">

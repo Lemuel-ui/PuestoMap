@@ -1,0 +1,6 @@
+# Local secrets and private data
+/includes/local_config.php
+/backups/*.sql
+/puestomap_private/
+/uploads/inspections/*
+!/uploads/inspections/.gitkeep

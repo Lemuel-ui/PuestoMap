@@ -11,9 +11,15 @@ $message = '';
 $messageType = 'success';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf();
     if ($action === 'backup') {
         $result = run_backup($pdo, 'manual');
-        $message = 'A new backup snapshot was created successfully: ' . $result['file'];
+        if (!empty($result['ok'])) {
+            $message = 'A new backup snapshot was created successfully: ' . $result['file'];
+        } else {
+            $message = 'Backup failed: ' . ($result['error'] ?? 'Unknown error.');
+            $messageType = 'danger';
+        }
     } elseif ($action === 'restore') {
         $path = $_POST['snapshot'] ?? '';
         $result = run_restore($pdo, $path);
@@ -48,6 +54,7 @@ include __DIR__ . '/../components/head_open.php';
         <div class="card-body">
             <p style="color:var(--color-text-muted);font-size:.9rem;">Generates a full snapshot of vendor records, permit data, and user accounts as a SQL file under <code>/backups</code>.</p>
             <form method="POST">
+                <?php echo csrf_field(); ?>
                 <input type="hidden" name="action" value="backup">
                 <button type="submit" class="btn btn-primary">Run Backup Now</button>
             </form>
@@ -59,6 +66,7 @@ include __DIR__ . '/../components/head_open.php';
         <div class="card-body">
             <?php if ($backups): ?>
             <form method="POST">
+                <?php echo csrf_field(); ?>
                 <div class="form-group">
                     <label class="form-label" for="snapshot">Choose a Backup Snapshot</label>
                     <select class="form-control" id="snapshot" name="snapshot">

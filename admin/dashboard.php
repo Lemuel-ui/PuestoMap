@@ -19,7 +19,7 @@ include __DIR__ . '/../components/head_open.php';
 <div class="page-head">
     <div>
         <h1>System Administration</h1>
-        <p>Monitor overall system health, user accounts, and data integrity.</p>
+        <p>Monitor user accounts, permit expiry reminders, BPLO operations, and system data.</p>
     </div>
 </div>
 
@@ -33,6 +33,16 @@ include __DIR__ . '/../components/head_open.php';
         <div class="stat-label">Registered Vendors</div>
         <div class="stat-value"><?php echo count($vendors); ?></div>
         <div class="stat-sub"><?php echo $counts['active']; ?> with active permits</div>
+    </div>
+    <div class="stat-card" style="--stat-color:var(--color-accent);">
+        <div class="stat-label">Permits Expiring Soon</div>
+        <div class="stat-value"><?php echo (int)$counts['expiring']; ?></div>
+        <div class="stat-sub">Due within 30 days</div>
+    </div>
+    <div class="stat-card" style="--stat-color:var(--color-danger);">
+        <div class="stat-label">Expired Permits</div>
+        <div class="stat-value"><?php echo (int)$counts['expired']; ?></div>
+        <div class="stat-sub">Require renewal follow-up</div>
     </div>
     <div class="stat-card" style="--stat-color:var(--color-info);">
         <div class="stat-label">Last Backup</div>

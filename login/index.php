@@ -15,6 +15,8 @@ if (isset($_GET['msg'])) {
         $error = 'Please log in to continue.';
     } elseif ($_GET['msg'] === 'unauthorized') {
         $error = 'You are not authorized to view that page.';
+    } elseif ($_GET['msg'] === 'pending') {
+        $error = 'Your registration request is still awaiting administrator approval.';
     }
 }
 
@@ -31,14 +33,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo = get_db();
             $user = get_user_by_email($pdo, $email);
 
-            if (
-                !$user ||
+            if (!$user) {
+                $pending = $pdo->prepare("SELECT request_id FROM account_registration_requests WHERE email = ? AND status = 'pending' LIMIT 1");
+                $pending->execute([strtolower($email)]);
+                $error = $pending->fetch()
+                    ? 'Your registration request is awaiting Admin / BPLO Head Officer approval. You can log in after it is approved.'
+                    : 'Invalid email or password.';
+            } elseif (
                 !isset($user['password_hash']) ||
                 !password_verify($password, $user['password_hash'])
             ) {
                 $error = 'Invalid email or password.';
             } elseif (empty($user['is_active'])) {
-                $error = 'This account has been deactivated. Contact the MISU Administrator.';
+                $error = 'This account has been deactivated. Contact the Admin / BPLO Head Officer.';
             } elseif (
                 empty($user['role']) ||
                 !isset(ROLE_HOME[$user['role']])
@@ -265,7 +272,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             </form>
 
-
+            <p style="margin-top:1.2rem;text-align:center;font-size:.9rem;color:var(--color-text-muted);">
+                Need an account? <a href="<?php echo BASE_URL; ?>/register/index.php" style="color:var(--color-primary);font-weight:600;">Request access</a>
+            </p>
 
         </div>
     </div>

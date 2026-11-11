@@ -1,0 +1,40 @@
+PUESTOMAP - PERMIT EXPIRY IN-APP NOTIFICATIONS
+
+FEATURES
+- Vendor reminders: 30 days, 7 days, and 1 day before expiry; on expiry date; and once after expiry.
+- Admin / BPLO Head Officer receives corresponding monitoring alerts.
+- Notification bell links to a user-specific notification history page.
+- Vendors can only read or mark their own notifications as read.
+- Duplicate reminders are prevented by a unique notification key.
+- Renewing a permit with a new expiry date creates a new reminder cycle.
+
+INSTALLATION
+1. BACK UP the PuestoMap project folder and the puestomap database.
+2. Copy the updated project files into C:\xampp\htdocs\PuestoMap.
+3. Open phpMyAdmin and select the existing puestomap database.
+4. Import ONLY:
+   database/migrations/20261110_permit_expiry_notifications.sql
+   Do not import database/puestomap.sql into an existing database.
+5. Confirm the notifications table now has the notification_key column.
+
+AUTOMATIC DAILY RUN (WINDOWS / XAMPP)
+For reliable daily checking even when nobody opens the website:
+1. Open Windows Task Scheduler.
+2. Choose Create Basic Task.
+3. Name: PuestoMap Permit Expiry Notifications.
+4. Trigger: Daily; choose a time such as 7:00 AM.
+5. Action: Start a program.
+6. Program/script:
+   C:\xampp\php\php.exe
+7. Add arguments:
+   "C:\xampp\htdocs\PuestoMap\cron\permit_expiry_notifications.php"
+8. Finish, then right-click the task and choose Run to test.
+   You can also double-click:
+   C:\xampp\htdocs\PuestoMap\cron\run_permit_expiry_notifications.bat
+
+NOTES
+- The application also checks for due reminders when an authenticated user opens a page. The scheduled task is recommended so checks still run daily when the site is idle.
+- These are in-app notifications only. Email sending is not included because no SMTP/email service is configured.
+- Date calculations use the application's configured PHP timezone.
+- A reminder is created only for a vendor account linked to a business record. Admin accounts receive monitoring alerts.
+- Test with a sample permit expiry date in a test database before using real vendor records.

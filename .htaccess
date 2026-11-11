@@ -1,0 +1,11 @@
+Options -Indexes
+
+# Do not expose hidden files, local secrets, or repository metadata.
+<FilesMatch "^\\.(?!well-known/)">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(?:\.git|\.svn)(?:/|$) - [F,L]
+</IfModule>

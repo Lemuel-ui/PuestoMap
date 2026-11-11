@@ -10,12 +10,13 @@ $saved = false;
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_registration'])) {
+    verify_csrf();
     $lat = $_POST['lat'] ?? '';
     $lng = $_POST['lng'] ?? '';
     $businessName = trim($_POST['business_name'] ?? '');
 
-    if ($businessName === '' || $lat === '' || $lng === '') {
-        $error = 'Please fill in the business name and drop a pin on the map.';
+    if ($businessName === '' || trim($_POST['owner_name'] ?? '') === '' || trim($_POST['category'] ?? '') === '' || trim($_POST['barangay'] ?? '') === '' || trim($_POST['contact'] ?? '') === '' || trim($_POST['permit_no'] ?? '') === '' || trim($_POST['expiry_date'] ?? '') === '' || $lat === '' || $lng === '') {
+        $error = 'Please complete all required fields and select the business location on the map.';
     } else {
         $result = create_vendor($pdo, [
             'business_name' => $businessName,
@@ -29,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_registration']
             'permit_no'     => trim($_POST['permit_no'] ?? ('BP-' . date('Y') . '-' . random_int(1000, 9999))),
             'expiry_date'   => $_POST['expiry_date'] ?: date('Y-m-d', strtotime('+1 year')),
             'registered_by' => $_SESSION['user_id'],
+            'vendor_user_id' => (int)($_POST['vendor_user_id'] ?? 0),
         ]);
         if ($result['ok']) {
             $saved = true;
@@ -38,6 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_registration']
     }
 }
 
+// Only approved, active Vendor accounts that are not linked to another business.
+$vendorAccounts = $pdo->query("SELECT u.user_id, u.full_name, u.email
+    FROM users u
+    WHERE u.role = 'vendor' AND u.is_active = 1
+      AND NOT EXISTS (SELECT 1 FROM vendors v WHERE v.vendor_user_id = u.user_id)
+    ORDER BY u.full_name")->fetchAll(PDO::FETCH_ASSOC);
 $vendors = get_all_vendors($pdo);
 include __DIR__ . '/../components/head_open.php';
 ?>
@@ -67,6 +75,7 @@ include __DIR__ . '/../components/head_open.php';
         <div class="card-header"><h3>Business &amp; Owner Details</h3></div>
         <div class="card-body">
             <form method="POST" action="">
+                <?php echo csrf_field(); ?>
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label" for="business_name">Business Name</label>
@@ -81,7 +90,7 @@ include __DIR__ . '/../components/head_open.php';
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label" for="category">Business Category</label>
-                        <select class="form-control" id="category" name="category">
+                        <select class="form-control" id="category" name="category" required>
                             <option>Retail / Sari-Sari Store</option>
                             <option>Food / Carinderia</option>
                             <option>Food / Bakery</option>
@@ -94,7 +103,7 @@ include __DIR__ . '/../components/head_open.php';
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="barangay">Barangay</label>
-                        <select class="form-control" id="barangay" name="barangay">
+                        <select class="form-control" id="barangay" name="barangay" required>
                             <option>Poblacion</option>
                             <option>Alae</option>
                             <option>Dahilayan</option>
@@ -104,6 +113,19 @@ include __DIR__ . '/../components/head_open.php';
                             <option>San Miguel</option>
                         </select>
                     </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="vendor_user_id">Link Approved Vendor Account (Optional)</label>
+                    <select class="form-control" id="vendor_user_id" name="vendor_user_id">
+                        <option value="0">-- Link later / No account yet --</option>
+                        <?php foreach ($vendorAccounts as $account): ?>
+                            <option value="<?php echo (int)$account['user_id']; ?>" <?php echo (int)($_POST['vendor_user_id'] ?? 0) === (int)$account['user_id'] ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($account['full_name'] . ' (' . $account['email'] . ')'); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="form-hint">Select the owner's approved Vendor login. Only unlinked active Vendor accounts appear here.</p>
                 </div>
 
                 <div class="form-row">
@@ -132,11 +154,11 @@ include __DIR__ . '/../components/head_open.php';
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label" for="permit_no">Initial Business Permit No.</label>
-                        <input class="form-control mono" id="permit_no" name="permit_no" placeholder="BP-2026-XXXX">
+                        <input class="form-control mono" id="permit_no" name="permit_no" placeholder="BP-2026-XXXX" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label" for="expiry_date">Permit Expiry Date</label>
-                        <input class="form-control" type="date" id="expiry_date" name="expiry_date" value="<?php echo date('Y-m-d', strtotime('+1 year')); ?>">
+                        <input class="form-control" type="date" id="expiry_date" name="expiry_date" required value="<?php echo date('Y-m-d', strtotime('+1 year')); ?>">
                     </div>
                 </div>
 

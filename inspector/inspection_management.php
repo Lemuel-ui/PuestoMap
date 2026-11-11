@@ -20,10 +20,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_inspection_id'
 
     // Accept a photo only after the assigned pending inspection was updated.
     if ($updated && !empty($_FILES['photo']['name']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
-        $allowed = ['jpg', 'jpeg', 'png', 'webp'];
+        $allowedMimeByExtension = [
+            'jpg'  => ['image/jpeg'],
+            'jpeg' => ['image/jpeg'],
+            'png'  => ['image/png'],
+            'webp' => ['image/webp'],
+        ];
         $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime = $finfo->file($_FILES['photo']['tmp_name']);
         $isImage = @getimagesize($_FILES['photo']['tmp_name']) !== false;
-        if ($isImage && in_array($ext, $allowed, true) && $_FILES['photo']['size'] <= 5 * 1024 * 1024) {
+        $validMime = isset($allowedMimeByExtension[$ext])
+            && in_array($mime, $allowedMimeByExtension[$ext], true);
+
+        if ($isImage && $validMime && $_FILES['photo']['size'] <= 5 * 1024 * 1024) {
             if (!is_dir(UPLOAD_DIR)) mkdir(UPLOAD_DIR, 0775, true);
             $filename = bin2hex(random_bytes(16)) . '.' . $ext;
             if (move_uploaded_file($_FILES['photo']['tmp_name'], UPLOAD_DIR . $filename)) {

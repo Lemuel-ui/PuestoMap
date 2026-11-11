@@ -9,6 +9,7 @@ $activePage = 'vendors';
 $message = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['toggle_vendor_id'])) {
+    verify_csrf();
     $vendorId = (int)$_POST['toggle_vendor_id'];
     $active = $_POST['toggle_to'] === '1';
     set_vendor_active($pdo, $vendorId, $active);
@@ -64,8 +65,10 @@ include __DIR__ . '/../components/head_open.php';
                     <td><span class="pin-status <?php echo $v['permit_status']; ?>"><?php echo ucfirst($v['permit_status']); ?></span></td>
                     <td>
                         <a class="btn btn-outline btn-sm" href="vendor_edit.php?id=<?php echo $v['vendor_id']; ?>" title="View / Edit business profile">Edit</a>
-                        <form method="POST" style="display:inline;" onsubmit="return <?php echo $v['is_active'] ? "pmConfirmDelete('Deactivate this vendor record?')" : 'true'; ?>;">
-                            <input type="hidden" name="toggle_vendor_id" value="<?php echo $v['vendor_id']; ?>">
+                        <form method="POST" style="display:inline;"
+                              onsubmit="return <?php echo $v['is_active'] ? "pmConfirmDelete('Deactivate this vendor record?')" : 'true'; ?>;">
+                            <?php echo csrf_field(); ?>
+                            <input type="hidden" name="toggle_vendor_id" value="<?php echo (int)$v['vendor_id']; ?>">
                             <input type="hidden" name="toggle_to" value="<?php echo $v['is_active'] ? '0' : '1'; ?>">
                             <button type="submit" class="btn <?php echo $v['is_active'] ? 'btn-danger-outline' : 'btn-outline'; ?> btn-sm"><?php echo $v['is_active'] ? 'Deactivate' : 'Reactivate'; ?></button>
                         </form>

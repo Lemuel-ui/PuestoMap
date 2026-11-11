@@ -1,0 +1,24 @@
+PUESTOMAP - VENDOR ACCOUNT LINKING
+
+No database migration is required for this feature. The vendors table already contains vendor_user_id and a foreign key to users.user_id.
+
+HOW TO LINK AN EXISTING VENDOR ACCOUNT
+1. Log in as BPLO Staff.
+2. Open Vendor Management.
+3. Find the business and click Edit.
+4. In the Link Vendor Login Account panel, select the approved, active Vendor account belonging to that business owner.
+5. Click Save Account Link.
+6. The Vendor should log out and log in again, then open Business Profile or Dashboard.
+
+FOR A NEW BUSINESS RECORD
+1. Open Vendor Registration.
+2. Complete the business details and pin its location.
+3. In Link Approved Vendor Account (Optional), select the approved Vendor login if available.
+4. Save Vendor Record.
+
+NOTES
+- Only approved and active accounts with role=vendor are selectable.
+- An account already linked to another business is not offered for selection.
+- One vendor login can be linked to one business record.
+- If no account exists yet, leave the field as Link later / No account yet. Approve the Vendor's registration first, then link it through Edit Vendor.
+- No existing business or user records are deleted by this feature.

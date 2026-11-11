@@ -32,7 +32,7 @@ include __DIR__ . '/../components/head_open.php';
         </table>
 
         <div class="auth-alert info" style="margin-top:1.5rem;">
-            You will automatically receive an email/in-app reminder 30 days before your permit expires. Visit the BPLO office at Manolo Fortich Municipal Hall to process your renewal.
+            In-app reminders will appear in your notification bell 30, 7, and 1 day before expiry, on the expiry date, and after expiry. Visit the BPLO office at Manolo Fortich Municipal Hall to process your renewal.
         </div>
     </div>
 </div>

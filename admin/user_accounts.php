@@ -10,16 +10,17 @@ $message = '';
 $messageType = 'success';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    verify_csrf();
     if (isset($_POST['create_account'])) {
         $fullName = trim($_POST['full_name'] ?? '');
         $email    = trim($_POST['email'] ?? '');
         $role     = $_POST['role'] ?? 'vendor';
         $password = $_POST['password'] ?? '';
 
-        if ($fullName === '' || $email === '' || strlen($password) < 6) {
-            $message = 'Please provide a full name, email, and a password of at least 6 characters.';
+        if ($fullName === '' || $email === '' || strlen($password) < 12) {
+            $message = 'Please provide a full name, email, and a password of at least 12 characters.';
             $messageType = 'danger';
-        } elseif (!in_array($role, ['admin', 'bplo_staff', 'head_officer', 'inspector', 'vendor'], true)) {
+        } elseif (!in_array($role, ['admin', 'bplo_staff', 'inspector', 'vendor'], true)) {
             $message = 'Invalid role selected.';
             $messageType = 'danger';
         } else {
@@ -32,10 +33,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     } elseif (isset($_POST['toggle_user_id'])) {
-        $userId = (int)$_POST['toggle_user_id'];
-        $active = $_POST['toggle_to'] === '1';
-        set_user_active($pdo, $userId, $active);
-        $message = $active ? 'Account reactivated.' : 'Account deactivated.';
+        $userId = (int) $_POST['toggle_user_id'];
+        $active = ($_POST['toggle_to'] ?? '0') === '1';
+
+        if (!$active && $userId === (int) $_SESSION['user_id']) {
+            $message = 'You cannot deactivate your own administrator account.';
+            $messageType = 'danger';
+        } else {
+            $target = $pdo->prepare('SELECT role, is_active FROM users WHERE user_id = ? LIMIT 1');
+            $target->execute([$userId]);
+            $targetUser = $target->fetch();
+
+            $activeAdmins = (int) $pdo->query(
+                "SELECT COUNT(*) FROM users WHERE role = 'admin' AND is_active = 1"
+            )->fetchColumn();
+
+            if (!$active && $targetUser && $targetUser['role'] === 'admin'
+                && (int) $targetUser['is_active'] === 1 && $activeAdmins <= 1) {
+                $message = 'The last active administrator cannot be deactivated.';
+                $messageType = 'danger';
+            } else {
+                set_user_active($pdo, $userId, $active);
+                $message = $active ? 'Account reactivated.' : 'Account deactivated.';
+            }
+        }
     }
 }
 
@@ -45,7 +66,7 @@ include __DIR__ . '/../components/head_open.php';
 <div class="page-head">
     <div>
         <h1>User Accounts</h1>
-        <p>Create and manage login accounts for BPLO Staff, Head Officers, Inspectors, and Vendors.</p>
+        <p>Create and manage accounts for Admin / BPLO Head Officer, BPLO Staff, Inspectors, and Vendors.</p>
     </div>
 </div>
 
@@ -69,7 +90,8 @@ include __DIR__ . '/../components/head_open.php';
                         <td><span class="badge-soft"><?php echo htmlspecialchars(ROLE_LABELS[$u['role']]); ?></span></td>
                         <td><span class="pin-status <?php echo $u['is_active'] ? 'active' : 'expired'; ?>"><?php echo $u['is_active'] ? 'Active' : 'Deactivated'; ?></span></td>
                         <td>
-                            <form method="POST" style="display:inline;" onsubmit="return <?php echo $u['is_active'] ? "pmConfirmDelete('Deactivate this account?')" : 'true'; ?>;">
+                            <form method="POST" style="display:inline;" onsubmit="return <?php echo $u['is_active'] ? "pmConfirmDelete('Deactivate this account?')" : 'true'; ?>
+                <?php echo csrf_field(); ?>;">
                                 <input type="hidden" name="toggle_user_id" value="<?php echo (int)$u['user_id']; ?>">
                                 <input type="hidden" name="toggle_to" value="<?php echo $u['is_active'] ? '0' : '1'; ?>">
                                 <button type="submit" class="btn <?php echo $u['is_active'] ? 'btn-danger-outline' : 'btn-outline'; ?> btn-sm">
@@ -88,6 +110,7 @@ include __DIR__ . '/../components/head_open.php';
         <div class="card-header"><h3>Create Account</h3></div>
         <div class="card-body">
             <form method="POST">
+                <?php echo csrf_field(); ?>
                 <div class="form-group">
                     <label class="form-label" for="full_name">Full Name</label>
                     <input class="form-control" id="full_name" name="full_name" required>
@@ -98,16 +121,15 @@ include __DIR__ . '/../components/head_open.php';
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="password">Temporary Password</label>
-                    <input class="form-control" type="password" id="password" name="password" minlength="6" required>
+                    <input class="form-control" type="password" id="password" name="password" minlength="12" required>
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="role">Assign Role</label>
                     <select class="form-control" id="role" name="role">
                         <option value="bplo_staff">BPLO Staff</option>
-                        <option value="head_officer">BPLO Head Officer</option>
                         <option value="inspector">Business Permit Inspector</option>
                         <option value="vendor">Vendor</option>
-                        <option value="admin">MISU Administrator</option>
+                        <option value="admin">Admin / BPLO Head Officer</option>
                     </select>
                 </div>
                 <button type="submit" name="create_account" class="btn btn-primary" style="width:100%;justify-content:center;">Create Account</button>
